@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=61.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dotlocker"
+version = "0.1.1"
+description = "A CLI tool for automatic backup and sync of config files"
+readme = "README.md"
+requires-python = ">=3.9"
+license = {text = "MIT"}
+authors = [
+    {name = "Ilya Temerev", email = "kidmoto3@gmail.com"}
+]
+dependencies = [
+    "click>=8.0.0",
+    "pyyaml>=6.0",
+    "watchdog>=3.0.0",
+    "gitpython>=3.1.0",
+    "pytest>=8.4.2",
+]
+
+[project.scripts]
+dotlocker = "dotlocker.cli:main"
+
+[dependency-groups]
+dev = [
+    "build>=1.2.2.post1",
+    "twine>=6.1.0",
+]
