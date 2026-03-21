@@ -29,8 +29,58 @@ def init_dotlocker() -> None:
     _init_git_repo(repo_path)
     _create_default_config(config_path)
 
-def remote_sync():
-    pass
+def sync_remote() -> None:
+    """Synchronize with remote repository (push/pull changes)."""
+    
+    if not config_path.exists():
+        print("✗ DotLocker not initialized. Run 'dotlocker init' first.")
+        return
+    
+    with open(config_path, 'r') as file:
+        config = yaml.safe_load(file)
+    
+    remote_url = config.get('remote', {}).get('url')
+    
+    if not remote_url:
+        print("⚠ No remote repository configured.")
+        print("  Add to ~/.dotlocker/config.yaml:")
+        print("  remote:")
+        print("    url: git@github.com:username/dotfiles.git")
+        return
+    
+    try:
+        repo = git.Repo(repo_path)
+        
+        # Add remote if doesn't exist
+        try:
+            origin = repo.remote('origin')
+        except ValueError:
+            origin = repo.create_remote('origin', remote_url)
+        
+        # Pull changes
+        print("⟳ Pulling from remote...")
+        try:
+            origin.pull(rebase=True)
+        except git.exc.GitCommandError:
+            pass  # No remote branch yet, that's fine
+        
+        # Stage and commit
+        repo.index.add([str(tracks_path)])
+        
+        if repo.index.diff("HEAD") or repo.untracked_files:
+            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            repo.index.commit(f"DotLocker sync: {timestamp}")
+            print("✓ Changes committed")
+            
+            # Push
+            print("⟳ Pushing to remote...")
+            origin.push()
+            print("✓ Sync completed!")
+        else:
+            print("ℹ No changes to sync")
+            
+    except Exception as e:
+        print(f"✗ Error: {e}")
 
 def _ensure_dir(path: Path) -> None:
     """
